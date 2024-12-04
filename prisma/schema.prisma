@@ -1,0 +1,54 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Post {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug     String    @unique
+  title    String
+  body     String
+  author   User      @relation(fields: [authorId], references: [id])
+  authorId String    @db.ObjectId
+  comments Comment[]
+}
+
+model User {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String   @unique
+  name    String?
+  posts   Post[]
+  refreshToken RefreshToken[]
+  userActivity UserActivity[]
+  password String?
+}
+
+model Comment {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  comment String
+  post    Post   @relation(fields: [postId], references: [id])
+  postId  String @db.ObjectId
+}
+
+model RefreshToken {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId 
+  user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model UserActivity {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String  @db.ObjectId
+  user      User      @relation(fields: [userId], references: [id])
+  activityType String   // e.g., 'LOGIN', 'LOGOUT', 'PASSWORD_CHANGE'
+  timestamp    DateTime @default(now())
+  ipAddress    String?  // Optional: track IP address of the activity
+  userAgent    String?  // Optional: track browser/device info
+}
